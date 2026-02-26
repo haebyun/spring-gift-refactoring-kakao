@@ -1,9 +1,9 @@
 package gift.wish;
 
-import gift.auth.LoginMember;
-import gift.member.Member;
+import gift.auth.AuthenticationResolver;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.NoSuchElementException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -20,75 +20,52 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/wishes")
 public class WishController {
     private final WishService wishService;
+    private final AuthenticationResolver authenticationResolver;
 
-    public WishController(
-            WishRepository wishRepository,
-            ProductRepository productRepository,
-            AuthenticationResolver authenticationResolver) {
-        this.wishRepository = wishRepository;
-        this.productRepository = productRepository;
+    public WishController(WishService wishService, AuthenticationResolver authenticationResolver) {
+        this.wishService = wishService;
         this.authenticationResolver = authenticationResolver;
     }
 
     @GetMapping
     public ResponseEntity<Page<WishResponse>> getWishes(
             @RequestHeader("Authorization") String authorization, Pageable pageable) {
-        // check auth
         var member = authenticationResolver.extractMember(authorization);
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
-        var wishes = wishRepository.findByMemberId(member.getId(), pageable).map(WishResponse::from);
+        var wishes = wishService.findByMemberId(member.getId(), pageable).map(WishResponse::from);
         return ResponseEntity.ok(wishes);
     }
 
     @PostMapping
     public ResponseEntity<WishResponse> addWish(
             @RequestHeader("Authorization") String authorization, @Valid @RequestBody WishRequest request) {
-        // check auth
         var member = authenticationResolver.extractMember(authorization);
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
+
+        AddWishResult result = wishService.addWish(member.getId(), request.productId());
+        WishResponse response = WishResponse.from(result.wish());
 
         if (result.created()) {
             return ResponseEntity.created(
                             URI.create("/api/wishes/" + result.wish().getId()))
                     .body(response);
         }
-
-        // check duplicate
-        var existing = wishRepository
-                .findByMemberIdAndProductId(member.getId(), product.getId())
-                .orElse(null);
-        if (existing != null) {
-            return ResponseEntity.ok(WishResponse.from(existing));
-        }
-
-        var saved = wishRepository.save(new Wish(member.getId(), product));
-        return ResponseEntity.created(URI.create("/api/wishes/" + saved.getId()))
-                .body(WishResponse.from(saved));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeWish(
             @RequestHeader("Authorization") String authorization, @PathVariable Long id) {
-        // check auth
         var member = authenticationResolver.extractMember(authorization);
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
 
-        var wish = wishRepository.findById(id).orElse(null);
-        if (wish == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        if (!wish.getMemberId().equals(member.getId())) {
-            return ResponseEntity.status(403).build();
-        }
-
-        wishRepository.delete(wish);
+        wishService.removeWish(member.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
