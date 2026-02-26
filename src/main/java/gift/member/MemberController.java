@@ -33,7 +33,15 @@ public class MemberController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody MemberRequest request) {
-        String token = memberService.login(request.email(), request.password());
+        final Member member = memberRepository
+                .findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
+
+        if (member.getPassword() == null || !member.getPassword().equals(request.password())) {
+            throw new IllegalArgumentException("Invalid email or password.");
+        }
+
+        final String token = jwtProvider.createToken(member.getEmail());
         return ResponseEntity.ok(new TokenResponse(token));
     }
 

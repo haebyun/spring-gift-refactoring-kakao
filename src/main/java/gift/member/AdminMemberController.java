@@ -36,10 +36,8 @@ public class AdminMemberController {
 
     @PostMapping
     public String create(@RequestParam String email, @RequestParam String password, Model model) {
-        try {
-            memberService.create(email, password);
-        } catch (IllegalArgumentException e) {
-            populateNewFormError(model, email, e.getMessage());
+        if (memberRepository.existsByEmail(email)) {
+            populateNewFormError(model, email, "Email is already registered.");
             return "member/new";
         }
         return "redirect:/admin/members";
@@ -47,20 +45,30 @@ public class AdminMemberController {
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        Member member = memberService.findById(id);
+        final Member member = memberRepository
+                .findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
         model.addAttribute("member", member);
         return "member/edit";
     }
 
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id, @RequestParam String email, @RequestParam String password) {
-        memberService.update(id, email, password);
+        final Member member = memberRepository
+                .findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
+        member.update(email, password);
+        memberRepository.save(member);
         return "redirect:/admin/members";
     }
 
     @PostMapping("/{id}/charge-point")
     public String chargePoint(@PathVariable Long id, @RequestParam int amount) {
-        memberService.chargePoint(id, amount);
+        final Member member = memberRepository
+                .findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
+        member.chargePoint(amount);
+        memberRepository.save(member);
         return "redirect:/admin/members";
     }
 

@@ -4,8 +4,6 @@ import gift.auth.LoginMember;
 import gift.member.Member;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.NoSuchElementException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,21 +18,61 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
+    public OrderController(
+            OrderRepository orderRepository,
+            OptionRepository optionRepository,
+            WishRepository wishRepository,
+            MemberRepository memberRepository,
+            AuthenticationResolver authenticationResolver,
+            KakaoMessageClient kakaoMessageClient) {
+        this.orderRepository = orderRepository;
+        this.optionRepository = optionRepository;
+        this.wishRepository = wishRepository;
+        this.memberRepository = memberRepository;
+        this.authenticationResolver = authenticationResolver;
+        this.kakaoMessageClient = kakaoMessageClient;
     }
 
     @GetMapping
-    public ResponseEntity<Page<OrderResponse>> getOrders(@LoginMember Member member, Pageable pageable) {
-        var orders = orderService.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
+    public ResponseEntity<?> getOrders(@RequestHeader("Authorization") String authorization, Pageable pageable) {
+        // auth check
+        var member = authenticationResolver.extractMember(authorization);
+        if (member == null) {
+            return ResponseEntity.status(401).build();
+        }
+        var orders = orderRepository.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
         return ResponseEntity.ok(orders);
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(
-            @LoginMember Member member, @Valid @RequestBody OrderRequest request) {
-        Order saved =
-                orderService.createOrder(member.getId(), request.optionId(), request.quantity(), request.message());
+    public ResponseEntity<?> createOrder(
+            @RequestHeader("Authorization") String authorization, @Valid @RequestBody OrderRequest request) {
+        // auth check
+        var member = authenticationResolver.extractMember(authorization);
+        if (member == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        // validate option
+        var option = optionRepository.findById(request.optionId()).orElse(null);
+        if (option == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // subtract stock
+        option.subtractQuantity(request.quantity());
+        optionRepository.save(option);
+
+        // deduct points
+        var price = option.getProduct().getPrice() * request.quantity();
+        member.deductPoint(price);
+        memberRepository.save(member);
+
+        // save order
+        var saved = orderRepository.save(new Order(option, member.getId(), request.quantity(), request.message()));
+
+        // best-effort kakao notification
+        sendKakaoMessageIfPossible(member, saved, option);
         return ResponseEntity.created(URI.create("/api/orders/" + saved.getId()))
                 .body(OrderResponse.from(saved));
     }

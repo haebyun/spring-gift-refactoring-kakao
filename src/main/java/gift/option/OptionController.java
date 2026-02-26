@@ -3,7 +3,7 @@ package gift.option;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,23 +29,53 @@ public class OptionController {
 
     @GetMapping
     public ResponseEntity<List<OptionResponse>> getOptions(@PathVariable Long productId) {
-        List<OptionResponse> options = optionService.findByProductId(productId).stream()
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+        List<OptionResponse> options = optionRepository.findByProductId(productId).stream()
                 .map(OptionResponse::from)
-                .toList();
+                .collect(Collectors.toList());
         return ResponseEntity.ok(options);
     }
 
     @PostMapping
     public ResponseEntity<OptionResponse> createOption(
             @PathVariable Long productId, @Valid @RequestBody OptionRequest request) {
-        Option saved = optionService.create(productId, request.name(), request.quantity());
+        validateName(request.name());
+
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (optionRepository.existsByProductIdAndName(productId, request.name())) {
+            throw new IllegalArgumentException("이미 존재하는 옵션명입니다.");
+        }
+
+        Option saved = optionRepository.save(new Option(product, request.name(), request.quantity()));
         URI location = URI.create("/api/products/" + productId + "/options/" + saved.getId());
         return ResponseEntity.created(location).body(OptionResponse.from(saved));
     }
 
     @DeleteMapping(path = "/{optionId}")
     public ResponseEntity<Void> deleteOption(@PathVariable Long productId, @PathVariable Long optionId) {
-        optionService.delete(productId, optionId);
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Option> options = optionRepository.findByProductId(productId);
+        if (options.size() <= 1) {
+            throw new IllegalArgumentException("옵션이 1개인 상품은 옵션을 삭제할 수 없습니다.");
+        }
+
+        Option option = optionRepository.findById(optionId).orElse(null);
+        if (option == null || !option.getProduct().getId().equals(productId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        optionRepository.delete(option);
         return ResponseEntity.noContent().build();
     }
 

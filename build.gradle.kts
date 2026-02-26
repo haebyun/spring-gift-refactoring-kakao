@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.5.9"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("com.diffplug.spotless") version "7.0.2"
     id("org.flywaydb.flyway") version "12.0.1"
 }
@@ -42,6 +43,24 @@ dependencies {
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")
     testImplementation("org.junit.platform:junit-platform-suite")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+spotless {
+    java {
+        target("src/*/java/**/*.java")
+        palantirJavaFormat()
+        removeUnusedImports()
+    }
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+ktlint {
+    verbose.set(true)
 }
 
 spotless {
