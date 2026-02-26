@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
@@ -14,10 +13,12 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<Category> findAll() {
         return categoryRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Category findById(Long id) {
         return categoryRepository
                 .findById(id)

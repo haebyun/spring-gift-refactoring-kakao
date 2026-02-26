@@ -3,6 +3,7 @@ package gift.category;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,9 +26,8 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getCategories() {
-        List<CategoryResponse> categories = categoryRepository.findAll().stream()
-                .map(CategoryResponse::from)
-                .toList();
+        List<CategoryResponse> categories =
+                categoryService.findAll().stream().map(CategoryResponse::from).toList();
         return ResponseEntity.ok(categories);
     }
 
@@ -41,13 +41,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        if (category == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        category.update(request.name(), request.color(), request.imageUrl(), request.description());
-        categoryRepository.save(category);
+        Category category = categoryService.update(id, request);
         return ResponseEntity.ok(CategoryResponse.from(category));
     }
 
