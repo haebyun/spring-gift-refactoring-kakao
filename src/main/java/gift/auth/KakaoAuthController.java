@@ -24,10 +24,7 @@ public class KakaoAuthController {
     private final MemberService memberService;
 
     public KakaoAuthController(
-            KakaoLoginProperties properties,
-            KakaoLoginClient kakaoLoginClient,
-            MemberRepository memberRepository,
-            JwtProvider jwtProvider) {
+            KakaoLoginProperties properties, KakaoLoginClient kakaoLoginClient, MemberService memberService) {
         this.properties = properties;
         this.kakaoLoginClient = kakaoLoginClient;
         this.memberService = memberService;
@@ -53,11 +50,7 @@ public class KakaoAuthController {
         KakaoLoginClient.KakaoTokenResponse kakaoToken = kakaoLoginClient.requestAccessToken(code);
         KakaoLoginClient.KakaoUserResponse kakaoUser = kakaoLoginClient.requestUserInfo(kakaoToken.accessToken());
 
-        Member member = memberRepository.findByEmail(email).orElseGet(() -> new Member(email));
-        member.updateKakaoAccessToken(kakaoToken.accessToken());
-        memberRepository.save(member);
-
-        String token = jwtProvider.createToken(member.getEmail());
+        String token = memberService.loginWithKakao(kakaoUser.email(), kakaoToken.accessToken());
         return ResponseEntity.ok(new TokenResponse(token));
     }
 }

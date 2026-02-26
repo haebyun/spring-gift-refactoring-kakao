@@ -21,9 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
     private final MemberService memberService;
 
-    public MemberController(MemberRepository memberRepository, JwtProvider jwtProvider) {
-        this.memberRepository = memberRepository;
-        this.jwtProvider = jwtProvider;
+    public MemberController(MemberService memberService) {
+        this.memberService = memberService;
     }
 
     @PostMapping("/register")
@@ -34,15 +33,7 @@ public class MemberController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody MemberRequest request) {
-        final Member member = memberRepository
-                .findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
-
-        if (member.getPassword() == null || !member.getPassword().equals(request.password())) {
-            throw new IllegalArgumentException("Invalid email or password.");
-        }
-
-        final String token = jwtProvider.createToken(member.getEmail());
+        String token = memberService.login(request.email(), request.password());
         return ResponseEntity.ok(new TokenResponse(token));
     }
 

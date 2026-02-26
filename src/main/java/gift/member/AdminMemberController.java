@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class AdminMemberController {
     private final MemberService memberService;
 
-    public AdminMemberController(MemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    public AdminMemberController(MemberService memberService) {
+        this.memberService = memberService;
     }
 
     @GetMapping
@@ -36,8 +36,10 @@ public class AdminMemberController {
 
     @PostMapping
     public String create(@RequestParam String email, @RequestParam String password, Model model) {
-        if (memberRepository.existsByEmail(email)) {
-            populateNewFormError(model, email, "Email is already registered.");
+        try {
+            memberService.create(email, password);
+        } catch (IllegalArgumentException e) {
+            populateNewFormError(model, email, e.getMessage());
             return "member/new";
         }
         return "redirect:/admin/members";
@@ -45,30 +47,20 @@ public class AdminMemberController {
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        final Member member = memberRepository
-                .findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
+        Member member = memberService.findById(id);
         model.addAttribute("member", member);
         return "member/edit";
     }
 
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id, @RequestParam String email, @RequestParam String password) {
-        final Member member = memberRepository
-                .findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
-        member.update(email, password);
-        memberRepository.save(member);
+        memberService.update(id, email, password);
         return "redirect:/admin/members";
     }
 
     @PostMapping("/{id}/charge-point")
     public String chargePoint(@PathVariable Long id, @RequestParam int amount) {
-        final Member member = memberRepository
-                .findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
-        member.chargePoint(amount);
-        memberRepository.save(member);
+        memberService.chargePoint(id, amount);
         return "redirect:/admin/members";
     }
 
