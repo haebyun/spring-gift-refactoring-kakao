@@ -1,12 +1,10 @@
 package gift.order;
 
-import gift.auth.LoginMember;
-import gift.member.Member;
-import gift.member.MemberRepository;
-import gift.option.Option;
-import gift.option.OptionRepository;
+import gift.auth.AuthenticationResolver;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.NoSuchElementException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,73 +17,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
-    private final OrderRepository orderRepository;
-    private final OptionRepository optionRepository;
-    private final MemberRepository memberRepository;
+    private final OrderService orderService;
     private final AuthenticationResolver authenticationResolver;
-    private final KakaoMessageClient kakaoMessageClient;
 
-    public OrderController(
-            OrderRepository orderRepository,
-            OptionRepository optionRepository,
-            MemberRepository memberRepository,
-            AuthenticationResolver authenticationResolver,
-            KakaoMessageClient kakaoMessageClient) {
-        this.orderRepository = orderRepository;
-        this.optionRepository = optionRepository;
-        this.memberRepository = memberRepository;
+    public OrderController(OrderService orderService, AuthenticationResolver authenticationResolver) {
+        this.orderService = orderService;
         this.authenticationResolver = authenticationResolver;
-        this.kakaoMessageClient = kakaoMessageClient;
     }
 
     @GetMapping
-    public ResponseEntity<?> getOrders(@RequestHeader("Authorization") String authorization, Pageable pageable) {
-        // auth check
+    public ResponseEntity<Page<OrderResponse>> getOrders(
+            @RequestHeader("Authorization") String authorization, Pageable pageable) {
         var member = authenticationResolver.extractMember(authorization);
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
-        var orders = orderRepository.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
+        var orders = orderService.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
         return ResponseEntity.ok(orders);
     }
 
-    // order flow:
-    // 1. auth check
-    // 2. validate option
-    // 3. subtract stock
-    // 4. deduct points
-    // 5. save order
-    // TODO: cleanup wish
-    // 7. send kakao notification
     @PostMapping
-    public ResponseEntity<?> createOrder(
+    public ResponseEntity<OrderResponse> createOrder(
             @RequestHeader("Authorization") String authorization, @Valid @RequestBody OrderRequest request) {
-        // auth check
         var member = authenticationResolver.extractMember(authorization);
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
 
-        // validate option
-        var option = optionRepository.findById(request.optionId()).orElse(null);
-        if (option == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // subtract stock
-        option.subtractQuantity(request.quantity());
-        optionRepository.save(option);
-
-        // deduct points
-        var price = option.getProduct().getPrice() * request.quantity();
-        member.deductPoint(price);
-        memberRepository.save(member);
-
-        // save order
-        var saved = orderRepository.save(new Order(option, member.getId(), request.quantity(), request.message()));
-
-        // best-effort kakao notification
-        sendKakaoMessageIfPossible(member, saved, option);
+        Order saved =
+                orderService.createOrder(member.getId(), request.optionId(), request.quantity(), request.message());
         return ResponseEntity.created(URI.create("/api/orders/" + saved.getId()))
                 .body(OrderResponse.from(saved));
     }
