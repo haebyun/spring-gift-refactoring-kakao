@@ -35,12 +35,12 @@ dependencies {
     runtimeOnly("com.h2database:h2")
     runtimeOnly("com.mysql:mysql-connector-j")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("io.rest-assured:rest-assured:5.5.1")
     testImplementation("io.cucumber:cucumber-java:7.21.1")
     testImplementation("io.cucumber:cucumber-spring:7.21.1")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")
     testImplementation("org.junit.platform:junit-platform-suite")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
