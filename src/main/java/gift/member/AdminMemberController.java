@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class AdminMemberController {
     private final MemberService memberService;
 
-    public AdminMemberController(MemberService memberService) {
-        this.memberService = memberService;
+    public AdminMemberController(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
     }
 
     @GetMapping
