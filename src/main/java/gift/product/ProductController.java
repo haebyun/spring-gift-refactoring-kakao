@@ -2,7 +2,7 @@ package gift.product;
 
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.List;
+import java.util.NoSuchElementException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -48,20 +48,8 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id, @Valid @RequestBody ProductRequest request) {
-        validateName(request.name());
-
-        Category category = categoryRepository.findById(request.categoryId()).orElse(null);
-        if (category == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Product product = productRepository.findById(id).orElse(null);
-        if (product == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        product.update(request.name(), request.price(), request.imageUrl(), category);
-        Product saved = productRepository.save(product);
+        Product saved = productService.update(
+                id, request.name(), request.price(), request.imageUrl(), request.categoryId(), false);
         return ResponseEntity.ok(ProductResponse.from(saved));
     }
 
