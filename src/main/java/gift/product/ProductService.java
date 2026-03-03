@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryService categoryService;
@@ -19,17 +20,14 @@ public class ProductService {
         this.categoryService = categoryService;
     }
 
-    @Transactional(readOnly = true)
     public Page<Product> findAll(Pageable pageable) {
         return productRepository.findAll(pageable);
     }
 
-    @Transactional(readOnly = true)
     public List<Product> findAll() {
         return productRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Product findById(Long id) {
         return productRepository.findById(id).orElseThrow(() -> new NoSuchElementException("상품이 존재하지 않습니다. id=" + id));
     }
