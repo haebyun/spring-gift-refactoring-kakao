@@ -2,6 +2,8 @@ package gift.auth;
 
 import gift.member.Member;
 import gift.member.MemberRepository;
+import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
