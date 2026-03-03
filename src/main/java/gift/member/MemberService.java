@@ -1,0 +1,86 @@
+package gift.member;
+
+import gift.auth.JwtProvider;
+import java.util.List;
+import java.util.NoSuchElementException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional(readOnly = true)
+public class MemberService {
+    private final MemberRepository memberRepository;
+    private final JwtProvider jwtProvider;
+    private final PasswordEncoder passwordEncoder;
+
+    public MemberService(MemberRepository memberRepository, JwtProvider jwtProvider, PasswordEncoder passwordEncoder) {
+        this.memberRepository = memberRepository;
+        this.jwtProvider = jwtProvider;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Transactional
+    public String register(String email, String password) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email is already registered.");
+        }
+        Member member = memberRepository.save(new Member(email, password, passwordEncoder));
+        return jwtProvider.createToken(member.getEmail());
+    }
+
+    public String login(String email, String password) {
+        Member member = memberRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
+        if (!member.checkPassword(password, passwordEncoder)) {
+            throw new IllegalArgumentException("Invalid email or password.");
+        }
+        return jwtProvider.createToken(member.getEmail());
+    }
+
+    @Transactional
+    public String loginWithKakao(String email, String kakaoAccessToken) {
+        Member member = memberRepository.findByEmail(email).orElseGet(() -> new Member(email));
+        member.updateKakaoAccessToken(kakaoAccessToken);
+        memberRepository.save(member);
+        return jwtProvider.createToken(member.getEmail());
+    }
+
+    public List<Member> findAll() {
+        return memberRepository.findAll();
+    }
+
+    public Member findById(Long id) {
+        return memberRepository
+                .findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Member not found. id=" + id));
+    }
+
+    @Transactional
+    public Member create(String email, String password) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email is already registered.");
+        }
+        return memberRepository.save(new Member(email, password, passwordEncoder));
+    }
+
+    @Transactional
+    public void update(Long id, String email, String password) {
+        Member member = findById(id);
+        member.update(email, password, passwordEncoder);
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void chargePoint(Long id, int amount) {
+        Member member = findById(id);
+        member.chargePoint(amount);
+        memberRepository.save(member);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        memberRepository.deleteById(id);
+    }
+}

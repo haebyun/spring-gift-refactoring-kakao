@@ -2,33 +2,52 @@ package gift.auth;
 
 import gift.member.Member;
 import gift.member.MemberRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Resolves the authenticated member from an Authorization header.
- *
- * @author brian.kim
- * @since 1.0
- */
 @Component
-public class AuthenticationResolver {
+public class AuthenticationResolver implements HandlerMethodArgumentResolver {
     private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
 
-    @Autowired
     public AuthenticationResolver(JwtProvider jwtProvider, MemberRepository memberRepository) {
         this.jwtProvider = jwtProvider;
         this.memberRepository = memberRepository;
     }
 
-    public Member extractMember(String authorization) {
+    @Override
+    public boolean supportsParameter(MethodParameter parameter) {
+        return parameter.hasParameterAnnotation(LoginMember.class)
+                && Member.class.isAssignableFrom(parameter.getParameterType());
+    }
+
+    @Override
+    public Member resolveArgument(
+            MethodParameter parameter,
+            ModelAndViewContainer mavContainer,
+            NativeWebRequest webRequest,
+            WebDataBinderFactory binderFactory) {
+        String authorization = webRequest.getHeader("Authorization");
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
         try {
-            final String token = authorization.replace("Bearer ", "");
-            final String email = jwtProvider.getEmail(token);
-            return memberRepository.findByEmail(email).orElse(null);
+            String token = authorization.replace("Bearer ", "");
+            String email = jwtProvider.getEmail(token);
+            return memberRepository
+                    .findByEmail(email)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
     }
 }
