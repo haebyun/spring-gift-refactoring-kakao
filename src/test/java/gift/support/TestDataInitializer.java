@@ -1,12 +1,12 @@
 package gift.support;
 
 import gift.category.Category;
-import gift.member.Member;
 import gift.option.Option;
 import gift.product.Product;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,8 +16,9 @@ public class TestDataInitializer {
     private final SimpleJdbcInsert categoryInsert;
     private final SimpleJdbcInsert productInsert;
     private final SimpleJdbcInsert optionInsert;
+    private final PasswordEncoder passwordEncoder;
 
-    public TestDataInitializer(DataSource dataSource) {
+    public TestDataInitializer(DataSource dataSource, PasswordEncoder passwordEncoder) {
         this.memberInsert =
                 new SimpleJdbcInsert(dataSource).withTableName("member").usingGeneratedKeyColumns("id");
         this.categoryInsert =
@@ -26,13 +27,14 @@ public class TestDataInitializer {
                 new SimpleJdbcInsert(dataSource).withTableName("product").usingGeneratedKeyColumns("id");
         this.optionInsert =
                 new SimpleJdbcInsert(dataSource).withTableName("options").usingGeneratedKeyColumns("id");
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public Long saveMember(Member member) {
+    public Long saveMember(String email, String rawPassword, int point) {
         Map<String, Object> params = Map.of(
-                "email", member.getEmail(),
-                "password", member.getPassword(),
-                "point", member.getPoint());
+                "email", email,
+                "password", passwordEncoder.encode(rawPassword),
+                "point", point);
         return memberInsert.executeAndReturnKey(params).longValue();
     }
 
