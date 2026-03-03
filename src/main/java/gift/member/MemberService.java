@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class MemberService {
     private final MemberRepository memberRepository;
     private final JwtProvider jwtProvider;
@@ -25,7 +26,6 @@ public class MemberService {
         return jwtProvider.createToken(member.getEmail());
     }
 
-    @Transactional(readOnly = true)
     public String login(String email, String password) {
         Member member = memberRepository
                 .findByEmail(email)
@@ -44,12 +44,10 @@ public class MemberService {
         return jwtProvider.createToken(member.getEmail());
     }
 
-    @Transactional(readOnly = true)
     public List<Member> findAll() {
         return memberRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public Member findById(Long id) {
         return memberRepository
                 .findById(id)
