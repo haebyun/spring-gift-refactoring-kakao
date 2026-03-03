@@ -35,25 +35,39 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Long memberId, Long optionId, int quantity, String message) {
-        Option option = optionRepository
-                .findById(optionId)
-                .orElseThrow(() -> new NoSuchElementException("옵션이 존재하지 않습니다. id=" + optionId));
+        Option option = findOption(optionId);
+        Member member = findMember(memberId);
 
-        option.subtractQuantity(quantity);
-        optionRepository.save(option);
-
-        Member member = memberRepository
-                .findById(memberId)
-                .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다. id=" + memberId));
-        int price = option.getProduct().getPrice() * quantity;
-        member.deductPoint(price);
-        memberRepository.save(member);
+        subtractStock(option, quantity);
+        deductPayment(member, option, quantity);
 
         Order saved = orderRepository.save(new Order(option, memberId, quantity, message));
-
         sendKakaoMessageIfPossible(member, saved, option);
 
         return saved;
+    }
+
+    private Option findOption(Long optionId) {
+        return optionRepository
+                .findById(optionId)
+                .orElseThrow(() -> new NoSuchElementException("옵션이 존재하지 않습니다. id=" + optionId));
+    }
+
+    private Member findMember(Long memberId) {
+        return memberRepository
+                .findById(memberId)
+                .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다. id=" + memberId));
+    }
+
+    private void subtractStock(Option option, int quantity) {
+        option.subtractQuantity(quantity);
+        optionRepository.save(option);
+    }
+
+    private void deductPayment(Member member, Option option, int quantity) {
+        int price = option.getProduct().getPrice() * quantity;
+        member.deductPoint(price);
+        memberRepository.save(member);
     }
 
     private void sendKakaoMessageIfPossible(Member member, Order order, Option option) {
