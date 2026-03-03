@@ -3,6 +3,7 @@ package gift.member;
 import gift.auth.JwtProvider;
 import java.util.List;
 import java.util.NoSuchElementException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final JwtProvider jwtProvider;
+    private final PasswordEncoder passwordEncoder;
 
-    public MemberService(MemberRepository memberRepository, JwtProvider jwtProvider) {
+    public MemberService(MemberRepository memberRepository, JwtProvider jwtProvider, PasswordEncoder passwordEncoder) {
         this.memberRepository = memberRepository;
         this.jwtProvider = jwtProvider;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -22,7 +25,7 @@ public class MemberService {
         if (memberRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already registered.");
         }
-        Member member = memberRepository.save(new Member(email, password));
+        Member member = memberRepository.save(new Member(email, password, passwordEncoder));
         return jwtProvider.createToken(member.getEmail());
     }
 
@@ -30,7 +33,7 @@ public class MemberService {
         Member member = memberRepository
                 .findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
-        if (member.getPassword() == null || !member.getPassword().equals(password)) {
+        if (!member.checkPassword(password, passwordEncoder)) {
             throw new IllegalArgumentException("Invalid email or password.");
         }
         return jwtProvider.createToken(member.getEmail());
@@ -59,13 +62,13 @@ public class MemberService {
         if (memberRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already registered.");
         }
-        return memberRepository.save(new Member(email, password));
+        return memberRepository.save(new Member(email, password, passwordEncoder));
     }
 
     @Transactional
     public void update(Long id, String email, String password) {
         Member member = findById(id);
-        member.update(email, password);
+        member.update(email, password, passwordEncoder);
         memberRepository.save(member);
     }
 

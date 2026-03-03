@@ -18,6 +18,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 public class GiftStepDefinitions {
 
+    private static final String TEST_EMAIL = "member@test.com";
+
     @Autowired
     private ScenarioContext context;
 
@@ -29,8 +31,7 @@ public class GiftStepDefinitions {
 
     @조건("포인트 {int}인 회원이 등록되어 있다")
     public void 포인트_n인_회원이_등록되어_있다(int point) {
-        var member = MemberFixture.회원(point);
-        Long memberId = initializer.saveMember(member);
+        Long memberId = initializer.saveMember(TEST_EMAIL, MemberFixture.RAW_PASSWORD, point);
         context.setMemberId(memberId);
 
         String body =
@@ -40,7 +41,7 @@ public class GiftStepDefinitions {
                     "password": "%s"
                 }
                 """
-                        .formatted(member.getEmail(), member.getPassword());
+                        .formatted(TEST_EMAIL, MemberFixture.RAW_PASSWORD);
 
         var response = RestAssured.given()
                 .log()

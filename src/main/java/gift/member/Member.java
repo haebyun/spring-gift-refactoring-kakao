@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * Represents a registered member.
@@ -27,18 +28,25 @@ public class Member {
 
     protected Member() {}
 
-    public Member(String email, String password) {
+    public Member(String email, String rawPassword, PasswordEncoder passwordEncoder) {
         this.email = email;
-        this.password = password;
+        this.password = passwordEncoder.encode(rawPassword);
     }
 
     public Member(String email) {
         this.email = email;
     }
 
-    public void update(String email, String password) {
+    public boolean checkPassword(String rawPassword, PasswordEncoder passwordEncoder) {
+        if (this.password == null) {
+            return false;
+        }
+        return passwordEncoder.matches(rawPassword, this.password);
+    }
+
+    public void update(String email, String rawPassword, PasswordEncoder passwordEncoder) {
         this.email = email;
-        this.password = password;
+        this.password = passwordEncoder.encode(rawPassword);
     }
 
     public void updateKakaoAccessToken(String kakaoAccessToken) {
@@ -69,10 +77,6 @@ public class Member {
 
     public String getEmail() {
         return email;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public String getKakaoAccessToken() {
