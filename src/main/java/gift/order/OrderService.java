@@ -77,9 +77,7 @@ public class OrderService {
     }
 
     private void cleanupWish(Long memberId, Option option) {
-        wishRepository
-                .findByMemberIdAndProductId(memberId, option.getProductId())
-                .ifPresent(wishRepository::delete);
+        wishRepository.findByMemberIdAndProductId(memberId, option.productId()).ifPresent(wishRepository::delete);
     }
 
     private void publishOrderCompletedEvent(Member member, Order order, Option option) {

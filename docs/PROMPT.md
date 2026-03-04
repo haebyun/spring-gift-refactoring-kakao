@@ -47,3 +47,6 @@
 
 ## 프롬프트 12 (2단계 미션)
 2단계 미션 — 작동 변경을 안전하게 수행하고 증거로 증명한다. 3가지 핵심 문제 해결: (1) 트랜잭션 원자성 검증 테스트 추가, (2) 주문 시 위시 자동 삭제 구현, (3) 도메인 로직 정리. 구조 변경으로 Kakao 알림 트랜잭션 분리, 가격 계산/소유권 확인 엔티티 이동, 이메일 검증 추출까지 포함.
+
+## 프롬프트 13 (추가 리팩토링)
+추가 리팩토링 7건 — (1) @ExceptionHandler 중복을 GlobalExceptionHandler(@RestControllerAdvice)로 추출, (2) Member 에러 메시지 한국어 통일, (3) hasKakaoIntegration() 캡슐화, (4) Product.getOptions() 불변 컬렉션 반환, (5) subtractQuantity() 에러 메시지에 컨텍스트 추가, (6) Option.belongsToProduct() 추가로 Law of Demeter 해소, (7) Option.getProductId() 편의 메서드 추가.

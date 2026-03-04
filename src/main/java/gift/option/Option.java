@@ -50,7 +50,7 @@ public class Option {
         return this.product.getId().equals(productId);
     }
 
-    public Long getProductId() {
+    public Long productId() {
         return product.getId();
     }
 
