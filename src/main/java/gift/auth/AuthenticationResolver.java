@@ -38,7 +38,7 @@ public class AuthenticationResolver implements HandlerMethodArgumentResolver {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
-        String token = authorization.replace("Bearer ", "");
+        String token = authorization.substring(7);
 
         String email;
         try {
