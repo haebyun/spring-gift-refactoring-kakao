@@ -2,6 +2,7 @@ package gift.auth;
 
 import gift.member.Member;
 import gift.member.MemberRepository;
+import io.jsonwebtoken.JwtException;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,7 @@ public class AuthenticationResolver implements HandlerMethodArgumentResolver {
         String email;
         try {
             email = jwtProvider.getEmail(token);
-        } catch (Exception e) {
+        } catch (JwtException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 

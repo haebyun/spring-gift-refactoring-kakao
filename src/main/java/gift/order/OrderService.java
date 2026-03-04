@@ -68,12 +68,10 @@ public class OrderService {
 
     private void subtractStock(Option option, int quantity) {
         option.subtractQuantity(quantity);
-        optionRepository.save(option);
     }
 
     private void deductPayment(Member member, Option option, int quantity) {
         member.deductPoint(option.calculatePrice(quantity));
-        memberRepository.save(member);
     }
 
     private void cleanupWish(Long memberId, Option option) {

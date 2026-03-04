@@ -29,15 +29,13 @@ public class WishService {
                 .findById(productId)
                 .orElseThrow(() -> new NoSuchElementException("상품이 존재하지 않습니다. id=" + productId));
 
-        var existing = wishRepository
+        return wishRepository
                 .findByMemberIdAndProductId(memberId, product.getId())
-                .orElse(null);
-        if (existing != null) {
-            return new AddWishResult(existing, false);
-        }
-
-        Wish saved = wishRepository.save(new Wish(memberId, product));
-        return new AddWishResult(saved, true);
+                .map(existing -> new AddWishResult(existing, false))
+                .orElseGet(() -> {
+                    Wish saved = wishRepository.save(new Wish(memberId, product));
+                    return new AddWishResult(saved, true);
+                });
     }
 
     @Transactional
