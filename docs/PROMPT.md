@@ -56,3 +56,6 @@
 
 ## 프롬프트 15 (var 제거 + 인터페이스 추출)
 var 제거 + 인터페이스 추출 — (1) 프로덕션 코드 7곳 + 테스트 코드 ~35곳의 var를 명시적 타입으로 교체, (2) KakaoMessageClient → OrderMessageClient 인터페이스 추출 (OrderCompletedEventListener 의존 타입 변경), (3) KakaoLoginClient → OAuthLoginClient 인터페이스 추출 + OAuthTokenResponse/OAuthUserResponse 프로바이더 중립 record 분리 (KakaoAuthController 의존 타입 변경).
+
+## 프롬프트 16 (미충족 사항 점검 + 문서 정비)
+미충족 사항 점검 — CLAUDE.md Architecture 섹션을 현재 3-layer 구조와 인터페이스 추출 결과에 맞게 업데이트, LayerDependencyTest에 역방향 의존 금지 규칙 3건 추가 (Service→Controller, Repository→Service, Repository→Controller), ADR 작성 (외부 API 클라이언트 인터페이스 추출 결정 근거 및 대안 비교).
