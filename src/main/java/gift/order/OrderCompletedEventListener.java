@@ -19,9 +19,9 @@ public class OrderCompletedEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(OrderCompletedEvent event) {
         try {
-            orderMessageClient.sendToMe(event.kakaoAccessToken(), event.order(), event.product());
+            orderMessageClient.sendToMe(event.accessToken(), event.order(), event.product());
         } catch (Exception e) {
-            log.warn("카카오 메시지 전송 실패: orderId={}", event.order().getId(), e);
+            log.warn("주문 알림 메시지 전송 실패: orderId={}", event.order().getId(), e);
         }
     }
 }
