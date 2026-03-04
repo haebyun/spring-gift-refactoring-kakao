@@ -83,7 +83,7 @@ public class OrderService {
     }
 
     private void publishOrderCompletedEvent(Member member, Order order, Option option) {
-        if (member.getKakaoAccessToken() == null) {
+        if (!member.hasKakaoIntegration()) {
             return;
         }
         eventPublisher.publishEvent(new OrderCompletedEvent(member.getKakaoAccessToken(), order, option.getProduct()));
