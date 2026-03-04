@@ -22,9 +22,7 @@ public class MemberService {
 
     @Transactional
     public String register(String email, String password) {
-        if (memberRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email is already registered.");
-        }
+        validateEmailNotDuplicated(email);
         Member member = memberRepository.save(new Member(email, password, passwordEncoder));
         return jwtProvider.createToken(member.getEmail());
     }
@@ -59,9 +57,7 @@ public class MemberService {
 
     @Transactional
     public Member create(String email, String password) {
-        if (memberRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email is already registered.");
-        }
+        validateEmailNotDuplicated(email);
         return memberRepository.save(new Member(email, password, passwordEncoder));
     }
 
@@ -82,5 +78,11 @@ public class MemberService {
     @Transactional
     public void delete(Long id) {
         memberRepository.deleteById(id);
+    }
+
+    private void validateEmailNotDuplicated(String email) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email is already registered.");
+        }
     }
 }
