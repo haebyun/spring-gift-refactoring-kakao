@@ -78,7 +78,7 @@ public class OrderService {
 
     private void cleanupWish(Long memberId, Option option) {
         wishRepository
-                .findByMemberIdAndProductId(memberId, option.getProduct().getId())
+                .findByMemberIdAndProductId(memberId, option.getProductId())
                 .ifPresent(wishRepository::delete);
     }
 
