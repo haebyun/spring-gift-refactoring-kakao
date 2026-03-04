@@ -191,6 +191,23 @@ public class GiftStepDefinitions {
         assertThat(actualQuantity).isEqualTo(expectedQuantity);
     }
 
+    @그리고("회원의 포인트가 {int}만큼 차감되어 있다")
+    public void 회원의_포인트가_n만큼_차감되어_있다(int expectedDeducted) {
+        int point = getMemberPoint();
+        assertThat(point).isEqualTo(10000000 - expectedDeducted);
+    }
+
+    @그리고("회원의 포인트가 {int}으로 유지되어 있다")
+    public void 회원의_포인트가_n으로_유지되어_있다(int expectedPoint) {
+        int point = getMemberPoint();
+        assertThat(point).isEqualTo(expectedPoint);
+    }
+
+    private int getMemberPoint() {
+        return jdbcTemplate.queryForObject(
+                "SELECT point FROM member WHERE id = ?", Integer.class, context.getMemberId());
+    }
+
     private int getOptionQuantityViaApi() {
         var response = RestAssured.given()
                 .log()
