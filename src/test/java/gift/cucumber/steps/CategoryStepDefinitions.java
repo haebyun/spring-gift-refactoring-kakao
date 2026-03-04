@@ -10,6 +10,8 @@ import io.cucumber.java.ko.그러면;
 import io.cucumber.java.ko.그리고;
 import io.cucumber.java.ko.만일;
 import io.cucumber.java.ko.조건;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,7 +41,7 @@ public class CategoryStepDefinitions {
                 """
                         .formatted(name);
 
-        var response = post("/api/categories", body);
+        ExtractableResponse<Response> response = post("/api/categories", body);
 
         context.setResponse(response);
         if (response.statusCode() == 201) {
@@ -64,7 +66,7 @@ public class CategoryStepDefinitions {
                 """
                         .formatted(name);
 
-        var response = put("/api/categories/" + context.getCategoryId(), body);
+        ExtractableResponse<Response> response = put("/api/categories/" + context.getCategoryId(), body);
 
         context.setResponse(response);
     }
@@ -76,7 +78,7 @@ public class CategoryStepDefinitions {
 
     @만일("해당 카테고리를 삭제한다")
     public void 해당_카테고리를_삭제한다() {
-        var response = delete("/api/categories/" + context.getCategoryId());
+        ExtractableResponse<Response> response = delete("/api/categories/" + context.getCategoryId());
 
         context.setResponse(response);
     }
@@ -88,7 +90,7 @@ public class CategoryStepDefinitions {
 
     @그리고("카테고리 목록이 비어있다")
     public void 카테고리_목록이_비어있다() {
-        var response = get("/api/categories");
+        ExtractableResponse<Response> response = get("/api/categories");
 
         List<Long> ids = response.jsonPath().getList("id", Long.class);
         assertThat(ids).isEmpty();
@@ -96,7 +98,7 @@ public class CategoryStepDefinitions {
 
     @그리고("카테고리 목록에 {string}이 포함되어 있다")
     public void 카테고리_목록에_이름이_포함되어_있다(String name) {
-        var response = get("/api/categories");
+        ExtractableResponse<Response> response = get("/api/categories");
 
         List<Long> ids = response.jsonPath().getList("id", Long.class);
         assertThat(ids).containsExactly(context.getCategoryId());

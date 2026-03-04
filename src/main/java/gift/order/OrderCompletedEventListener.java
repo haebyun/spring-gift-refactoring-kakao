@@ -10,9 +10,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class OrderCompletedEventListener {
     private static final Logger log = LoggerFactory.getLogger(OrderCompletedEventListener.class);
 
-    private final KakaoMessageClient kakaoMessageClient;
+    private final OrderMessageClient kakaoMessageClient;
 
-    public OrderCompletedEventListener(KakaoMessageClient kakaoMessageClient) {
+    public OrderCompletedEventListener(OrderMessageClient kakaoMessageClient) {
         this.kakaoMessageClient = kakaoMessageClient;
     }
 

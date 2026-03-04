@@ -8,6 +8,8 @@ import io.cucumber.java.ko.그러면;
 import io.cucumber.java.ko.그리고;
 import io.cucumber.java.ko.만일;
 import io.cucumber.java.ko.조건;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class MemberStepDefinitions {
@@ -54,7 +56,7 @@ public class MemberStepDefinitions {
                 """
                         .formatted(email, password);
 
-        var response = post("/api/members/register", body);
+        ExtractableResponse<Response> response = post("/api/members/register", body);
 
         context.setResponse(response);
     }
@@ -70,7 +72,7 @@ public class MemberStepDefinitions {
                 """
                         .formatted(email, password);
 
-        var response = post("/api/members/login", body);
+        ExtractableResponse<Response> response = post("/api/members/login", body);
 
         context.setResponse(response);
     }

@@ -7,7 +7,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 
 @Component
-public class KakaoLoginClient {
+public class KakaoLoginClient implements OAuthLoginClient {
     private final KakaoLoginProperties properties;
     private final RestClient restClient;
 
@@ -16,7 +16,8 @@ public class KakaoLoginClient {
         this.restClient = builder.build();
     }
 
-    public KakaoTokenResponse requestAccessToken(String code) {
+    @Override
+    public OAuthTokenResponse requestAccessToken(String code) {
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", properties.clientId());
@@ -24,35 +25,40 @@ public class KakaoLoginClient {
         params.add("code", code);
         params.add("client_secret", properties.clientSecret());
 
-        return restClient
+        KakaoTokenResponse kakaoToken = restClient
                 .post()
                 .uri("https://kauth.kakao.com/oauth/token")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .body(params)
                 .retrieve()
                 .body(KakaoTokenResponse.class);
+
+        return new OAuthTokenResponse(kakaoToken.accessToken());
     }
 
-    public KakaoUserResponse requestUserInfo(String accessToken) {
-        return restClient
+    @Override
+    public OAuthUserResponse requestUserInfo(String accessToken) {
+        KakaoUserResponse kakaoUser = restClient
                 .get()
                 .uri("https://kapi.kakao.com/v2/user/me")
                 .header("Authorization", "Bearer " + accessToken)
                 .retrieve()
                 .body(KakaoUserResponse.class);
+
+        return new OAuthUserResponse(kakaoUser.email());
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record KakaoTokenResponse(@JsonProperty("access_token") String accessToken) {}
+    record KakaoTokenResponse(@JsonProperty("access_token") String accessToken) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record KakaoUserResponse(@JsonProperty("kakao_account") KakaoAccount kakaoAccount) {
+    record KakaoUserResponse(@JsonProperty("kakao_account") KakaoAccount kakaoAccount) {
 
-        public String email() {
+        String email() {
             return kakaoAccount.email();
         }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        public record KakaoAccount(String email) {}
+        record KakaoAccount(String email) {}
     }
 }

@@ -53,3 +53,6 @@
 
 ## 프롬프트 14 (최종 리팩토링 + 테스트 개선)
 프로덕션 코드 7건 + 테스트 인프라 3건 — (A-1) KakaoMessageClient JSON 문자열 → ObjectMapper 안전 직렬화 + calculatePrice() 재사용, (A-2) MemberService 에러 메시지 한국어 통일 4곳, (A-3) ProductRequest.toEntity() 미사용 코드 삭제, (A-4) WishService.addWish() Optional 안티패턴 해소, (A-5) OptionService.delete() 중복 쿼리 통합, (A-6) AuthenticationResolver catch(Exception) → catch(JwtException) 축소, (A-7) 불필요한 JPA save() 호출 6곳 제거, (B-1) RestAssured ApiClient 헬퍼 추출, (B-2) .log().all() → .log().ifValidationFails() 일괄 변경, (B-3) DatabaseCleaner 동적 테이블 목록.
+
+## 프롬프트 15 (var 제거 + 인터페이스 추출)
+var 제거 + 인터페이스 추출 — (1) 프로덕션 코드 7곳 + 테스트 코드 ~35곳의 var를 명시적 타입으로 교체, (2) KakaoMessageClient → OrderMessageClient 인터페이스 추출 (OrderCompletedEventListener 의존 타입 변경), (3) KakaoLoginClient → OAuthLoginClient 인터페이스 추출 + OAuthTokenResponse/OAuthUserResponse 프로바이더 중립 record 분리 (KakaoAuthController 의존 타입 변경).

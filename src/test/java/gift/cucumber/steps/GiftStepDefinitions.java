@@ -11,6 +11,8 @@ import io.cucumber.java.ko.그러면;
 import io.cucumber.java.ko.그리고;
 import io.cucumber.java.ko.만일;
 import io.cucumber.java.ko.조건;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -42,7 +44,7 @@ public class GiftStepDefinitions {
                 """
                         .formatted(TEST_EMAIL, MemberFixture.RAW_PASSWORD);
 
-        var response = post("/api/members/login", body);
+        ExtractableResponse<Response> response = post("/api/members/login", body);
 
         String token = response.jsonPath().getString("token");
         context.setToken(token);
@@ -66,7 +68,7 @@ public class GiftStepDefinitions {
                 """
                         .formatted(context.getOptionId(), quantity);
 
-        var response = post("/api/orders", body, context.getToken());
+        ExtractableResponse<Response> response = post("/api/orders", body, context.getToken());
 
         context.setResponse(response);
     }
@@ -82,7 +84,7 @@ public class GiftStepDefinitions {
                 }
                 """;
 
-        var response = post("/api/orders", body, context.getToken());
+        ExtractableResponse<Response> response = post("/api/orders", body, context.getToken());
 
         context.setResponse(response);
     }
@@ -99,7 +101,7 @@ public class GiftStepDefinitions {
                 """
                         .formatted(context.getOptionId());
 
-        var response = post("/api/orders", body);
+        ExtractableResponse<Response> response = post("/api/orders", body);
 
         context.setResponse(response);
     }
@@ -121,7 +123,7 @@ public class GiftStepDefinitions {
 
     @그리고("주문 목록에 해당 주문이 포함되어 있다")
     public void 주문_목록에_해당_주문이_포함되어_있다() {
-        var response = get("/api/orders", context.getToken());
+        ExtractableResponse<Response> response = get("/api/orders", context.getToken());
 
         List<Long> optionIds = response.jsonPath().getList("content.optionId", Long.class);
         assertThat(optionIds).contains(context.getOptionId());
@@ -157,7 +159,7 @@ public class GiftStepDefinitions {
     }
 
     private int getOptionQuantityViaApi() {
-        var response = get("/api/products/" + context.getProductId() + "/options");
+        ExtractableResponse<Response> response = get("/api/products/" + context.getProductId() + "/options");
 
         List<Long> ids = response.jsonPath().getList("id", Long.class);
         List<Integer> quantities = response.jsonPath().getList("quantity", Integer.class);

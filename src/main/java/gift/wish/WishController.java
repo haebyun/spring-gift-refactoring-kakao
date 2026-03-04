@@ -26,7 +26,8 @@ public class WishController {
 
     @GetMapping
     public ResponseEntity<Page<WishResponse>> getWishes(@LoginMember Member member, Pageable pageable) {
-        var wishes = wishService.findByMemberId(member.getId(), pageable).map(WishResponse::from);
+        Page<WishResponse> wishes =
+                wishService.findByMemberId(member.getId(), pageable).map(WishResponse::from);
         return ResponseEntity.ok(wishes);
     }
 

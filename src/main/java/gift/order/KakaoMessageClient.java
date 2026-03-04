@@ -9,7 +9,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 
 @Component
-public class KakaoMessageClient {
+public class KakaoMessageClient implements OrderMessageClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
@@ -18,10 +18,11 @@ public class KakaoMessageClient {
         this.objectMapper = objectMapper;
     }
 
+    @Override
     public void sendToMe(String accessToken, Order order, Product product) {
-        var templateObject = buildTemplate(order, product);
+        String templateObject = buildTemplate(order, product);
 
-        var params = new LinkedMultiValueMap<String, String>();
+        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("template_object", templateObject);
 
         restClient
@@ -35,10 +36,10 @@ public class KakaoMessageClient {
     }
 
     private String buildTemplate(Order order, Product product) {
-        var totalPrice = String.format("%,d", order.getOption().calculatePrice(order.getQuantity()));
-        var messageSuffix =
+        String totalPrice = String.format("%,d", order.getOption().calculatePrice(order.getQuantity()));
+        String messageSuffix =
                 order.getMessage() != null && !order.getMessage().isBlank() ? "\n\n💌 " + order.getMessage() : "";
-        var text = "🎁 선물이 도착했어요!\n\n%s (%s)\n수량: %d개\n금액: %s원%s"
+        String text = "🎁 선물이 도착했어요!\n\n%s (%s)\n수량: %d개\n금액: %s원%s"
                 .formatted(
                         product.getName(), order.getOption().getName(), order.getQuantity(), totalPrice, messageSuffix);
 

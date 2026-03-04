@@ -7,6 +7,8 @@ import gift.cucumber.ScenarioContext;
 import io.cucumber.java.ko.그러면;
 import io.cucumber.java.ko.그리고;
 import io.cucumber.java.ko.만일;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,7 +26,7 @@ public class WishStepDefinitions {
                 """
                 .formatted(context.getProductId());
 
-        var response = post("/api/wishes", body, context.getToken());
+        ExtractableResponse<Response> response = post("/api/wishes", body, context.getToken());
 
         context.setResponse(response);
         if (response.statusCode() == 201) {
@@ -41,14 +43,14 @@ public class WishStepDefinitions {
                 """
                 .formatted(context.getProductId());
 
-        var response = post("/api/wishes", body, context.getToken());
+        ExtractableResponse<Response> response = post("/api/wishes", body, context.getToken());
 
         context.setResponse(response);
     }
 
     @그리고("해당 위시를 삭제한다")
     public void 해당_위시를_삭제한다() {
-        var response = delete("/api/wishes/" + context.getWishId(), context.getToken());
+        ExtractableResponse<Response> response = delete("/api/wishes/" + context.getWishId(), context.getToken());
 
         context.setResponse(response);
     }
@@ -63,10 +65,10 @@ public class WishStepDefinitions {
                 }
                 """;
 
-        var registerResponse = post("/api/members/register", body);
+        ExtractableResponse<Response> registerResponse = post("/api/members/register", body);
         String otherToken = registerResponse.jsonPath().getString("token");
 
-        var response = delete("/api/wishes/" + context.getWishId(), otherToken);
+        ExtractableResponse<Response> response = delete("/api/wishes/" + context.getWishId(), otherToken);
 
         context.setResponse(response);
     }
@@ -93,7 +95,7 @@ public class WishStepDefinitions {
 
     @그리고("위시리스트에 해당 상품이 포함되어 있다")
     public void 위시리스트에_해당_상품이_포함되어_있다() {
-        var response = get("/api/wishes", context.getToken());
+        ExtractableResponse<Response> response = get("/api/wishes", context.getToken());
 
         List<Long> productIds = response.jsonPath().getList("content.productId", Long.class);
         assertThat(productIds).contains(context.getProductId());
@@ -101,7 +103,7 @@ public class WishStepDefinitions {
 
     @그리고("위시리스트가 비어있다")
     public void 위시리스트가_비어있다() {
-        var response = get("/api/wishes", context.getToken());
+        ExtractableResponse<Response> response = get("/api/wishes", context.getToken());
 
         List<Long> productIds = response.jsonPath().getList("content.productId", Long.class);
         assertThat(productIds).isEmpty();

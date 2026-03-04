@@ -24,7 +24,8 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<Page<OrderResponse>> getOrders(@LoginMember Member member, Pageable pageable) {
-        var orders = orderService.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
+        Page<OrderResponse> orders =
+                orderService.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
         return ResponseEntity.ok(orders);
     }
 

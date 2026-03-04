@@ -20,13 +20,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequestMapping(path = "/api/auth/kakao")
 public class KakaoAuthController {
     private final KakaoLoginProperties properties;
-    private final KakaoLoginClient kakaoLoginClient;
+    private final OAuthLoginClient oAuthLoginClient;
     private final MemberService memberService;
 
     public KakaoAuthController(
-            KakaoLoginProperties properties, KakaoLoginClient kakaoLoginClient, MemberService memberService) {
+            KakaoLoginProperties properties, OAuthLoginClient oAuthLoginClient, MemberService memberService) {
         this.properties = properties;
-        this.kakaoLoginClient = kakaoLoginClient;
+        this.oAuthLoginClient = oAuthLoginClient;
         this.memberService = memberService;
     }
 
@@ -47,10 +47,10 @@ public class KakaoAuthController {
 
     @GetMapping(path = "/callback")
     public ResponseEntity<TokenResponse> callback(@RequestParam("code") String code) {
-        KakaoLoginClient.KakaoTokenResponse kakaoToken = kakaoLoginClient.requestAccessToken(code);
-        KakaoLoginClient.KakaoUserResponse kakaoUser = kakaoLoginClient.requestUserInfo(kakaoToken.accessToken());
+        OAuthTokenResponse oAuthToken = oAuthLoginClient.requestAccessToken(code);
+        OAuthUserResponse oAuthUser = oAuthLoginClient.requestUserInfo(oAuthToken.accessToken());
 
-        String token = memberService.loginWithKakao(kakaoUser.email(), kakaoToken.accessToken());
+        String token = memberService.loginWithKakao(oAuthUser.email(), oAuthToken.accessToken());
         return ResponseEntity.ok(new TokenResponse(token));
     }
 }
