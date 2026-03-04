@@ -6,8 +6,7 @@ import gift.option.Option;
 import gift.option.OptionRepository;
 import gift.wish.WishRepository;
 import java.util.NoSuchElementException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,25 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class OrderService {
-    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
     private final OptionRepository optionRepository;
     private final MemberRepository memberRepository;
     private final WishRepository wishRepository;
-    private final KakaoMessageClient kakaoMessageClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderService(
             OrderRepository orderRepository,
             OptionRepository optionRepository,
             MemberRepository memberRepository,
             WishRepository wishRepository,
-            KakaoMessageClient kakaoMessageClient) {
+            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.optionRepository = optionRepository;
         this.memberRepository = memberRepository;
         this.wishRepository = wishRepository;
-        this.kakaoMessageClient = kakaoMessageClient;
+        this.eventPublisher = eventPublisher;
     }
 
     public Page<Order> findByMemberId(Long memberId, Pageable pageable) {
@@ -51,7 +49,7 @@ public class OrderService {
 
         Order saved = orderRepository.save(new Order(option, memberId, quantity, message));
         cleanupWish(memberId, option);
-        sendKakaoMessageIfPossible(member, saved, option);
+        publishOrderCompletedEvent(member, saved, option);
 
         return saved;
     }
@@ -85,15 +83,10 @@ public class OrderService {
                 .ifPresent(wishRepository::delete);
     }
 
-    private void sendKakaoMessageIfPossible(Member member, Order order, Option option) {
+    private void publishOrderCompletedEvent(Member member, Order order, Option option) {
         if (member.getKakaoAccessToken() == null) {
             return;
         }
-        try {
-            var product = option.getProduct();
-            kakaoMessageClient.sendToMe(member.getKakaoAccessToken(), order, product);
-        } catch (Exception e) {
-            log.warn("카카오 메시지 전송 실패: memberId={}, orderId={}", member.getId(), order.getId(), e);
-        }
+        eventPublisher.publishEvent(new OrderCompletedEvent(member.getKakaoAccessToken(), order, option.getProduct()));
     }
 }
