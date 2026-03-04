@@ -4,6 +4,7 @@ import gift.member.Member;
 import gift.member.MemberRepository;
 import gift.option.Option;
 import gift.option.OptionRepository;
+import gift.wish.WishRepository;
 import java.util.NoSuchElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,16 +21,19 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OptionRepository optionRepository;
     private final MemberRepository memberRepository;
+    private final WishRepository wishRepository;
     private final KakaoMessageClient kakaoMessageClient;
 
     public OrderService(
             OrderRepository orderRepository,
             OptionRepository optionRepository,
             MemberRepository memberRepository,
+            WishRepository wishRepository,
             KakaoMessageClient kakaoMessageClient) {
         this.orderRepository = orderRepository;
         this.optionRepository = optionRepository;
         this.memberRepository = memberRepository;
+        this.wishRepository = wishRepository;
         this.kakaoMessageClient = kakaoMessageClient;
     }
 
@@ -46,6 +50,7 @@ public class OrderService {
         deductPayment(member, option, quantity);
 
         Order saved = orderRepository.save(new Order(option, memberId, quantity, message));
+        cleanupWish(memberId, option);
         sendKakaoMessageIfPossible(member, saved, option);
 
         return saved;
@@ -72,6 +77,12 @@ public class OrderService {
         int price = option.getProduct().getPrice() * quantity;
         member.deductPoint(price);
         memberRepository.save(member);
+    }
+
+    private void cleanupWish(Long memberId, Option option) {
+        wishRepository
+                .findByMemberIdAndProductId(memberId, option.getProduct().getId())
+                .ifPresent(wishRepository::delete);
     }
 
     private void sendKakaoMessageIfPossible(Member member, Order order, Option option) {
