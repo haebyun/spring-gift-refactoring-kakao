@@ -38,16 +38,17 @@ public class AuthenticationResolver implements HandlerMethodArgumentResolver {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
+        String token = authorization.replace("Bearer ", "");
+
+        String email;
         try {
-            String token = authorization.replace("Bearer ", "");
-            String email = jwtProvider.getEmail(token);
-            return memberRepository
-                    .findByEmail(email)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-        } catch (ResponseStatusException e) {
-            throw e;
+            email = jwtProvider.getEmail(token);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
+
+        return memberRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
     }
 }
