@@ -50,3 +50,6 @@
 
 ## 프롬프트 13 (추가 리팩토링)
 추가 리팩토링 7건 — (1) @ExceptionHandler 중복을 GlobalExceptionHandler(@RestControllerAdvice)로 추출, (2) Member 에러 메시지 한국어 통일, (3) hasKakaoIntegration() 캡슐화, (4) Product.getOptions() 불변 컬렉션 반환, (5) subtractQuantity() 에러 메시지에 컨텍스트 추가, (6) Option.belongsToProduct() 추가로 Law of Demeter 해소, (7) Option.getProductId() 편의 메서드 추가.
+
+## 프롬프트 14 (최종 리팩토링 + 테스트 개선)
+프로덕션 코드 7건 + 테스트 인프라 3건 — (A-1) KakaoMessageClient JSON 문자열 → ObjectMapper 안전 직렬화 + calculatePrice() 재사용, (A-2) MemberService 에러 메시지 한국어 통일 4곳, (A-3) ProductRequest.toEntity() 미사용 코드 삭제, (A-4) WishService.addWish() Optional 안티패턴 해소, (A-5) OptionService.delete() 중복 쿼리 통합, (A-6) AuthenticationResolver catch(Exception) → catch(JwtException) 축소, (A-7) 불필요한 JPA save() 호출 6곳 제거, (B-1) RestAssured ApiClient 헬퍼 추출, (B-2) .log().all() → .log().ifValidationFails() 일괄 변경, (B-3) DatabaseCleaner 동적 테이블 목록.
