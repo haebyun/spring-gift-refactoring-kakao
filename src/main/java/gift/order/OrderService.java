@@ -44,8 +44,8 @@ public class OrderService {
         Option option = findOption(optionId);
         Member member = findMember(memberId);
 
-        subtractStock(option, quantity);
-        deductPayment(member, option, quantity);
+        option.subtractQuantity(quantity);
+        member.deductPoint(option.calculatePrice(quantity));
 
         Order saved = orderRepository.save(new Order(option, memberId, quantity, message));
         cleanupWish(memberId, option);
@@ -64,14 +64,6 @@ public class OrderService {
         return memberRepository
                 .findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다. id=" + memberId));
-    }
-
-    private void subtractStock(Option option, int quantity) {
-        option.subtractQuantity(quantity);
-    }
-
-    private void deductPayment(Member member, Option option, int quantity) {
-        member.deductPoint(option.calculatePrice(quantity));
     }
 
     private void cleanupWish(Long memberId, Option option) {
