@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -71,8 +72,8 @@ public class Member {
         this.point -= amount;
     }
 
-    public boolean hasKakaoIntegration() {
-        return kakaoAccessToken != null;
+    public Optional<String> getKakaoAccessTokenIfIntegrated() {
+        return Optional.ofNullable(kakaoAccessToken);
     }
 
     public Long getId() {
@@ -81,10 +82,6 @@ public class Member {
 
     public String getEmail() {
         return email;
-    }
-
-    public String getKakaoAccessToken() {
-        return kakaoAccessToken;
     }
 
     public int getPoint() {

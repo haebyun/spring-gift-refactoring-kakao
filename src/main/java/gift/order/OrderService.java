@@ -73,9 +73,7 @@ public class OrderService {
     }
 
     private void publishOrderCompletedEvent(Member member, Order order, Product product) {
-        if (!member.hasKakaoIntegration()) {
-            return;
-        }
-        eventPublisher.publishEvent(new OrderCompletedEvent(member.getKakaoAccessToken(), order, product));
+        member.getKakaoAccessTokenIfIntegrated()
+                .ifPresent(token -> eventPublisher.publishEvent(new OrderCompletedEvent(token, order, product)));
     }
 }
