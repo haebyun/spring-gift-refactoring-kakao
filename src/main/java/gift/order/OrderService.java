@@ -4,6 +4,7 @@ import gift.member.Member;
 import gift.member.MemberRepository;
 import gift.option.Option;
 import gift.option.OptionRepository;
+import gift.product.Product;
 import gift.wish.WishRepository;
 import java.util.NoSuchElementException;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,14 +43,15 @@ public class OrderService {
     @Transactional
     public Order createOrder(Long memberId, Long optionId, int quantity, String message) {
         Option option = findOption(optionId);
+        Product product = option.getProduct();
         Member member = findMember(memberId);
 
         option.subtractQuantity(quantity);
-        member.deductPoint(option.calculatePrice(quantity));
+        member.deductPoint(product.calculatePrice(quantity));
 
         Order saved = orderRepository.save(new Order(option, memberId, quantity, message));
         cleanupWish(memberId, option);
-        publishOrderCompletedEvent(member, saved, option);
+        publishOrderCompletedEvent(member, saved, product);
 
         return saved;
     }
@@ -70,10 +72,10 @@ public class OrderService {
         wishRepository.findByMemberIdAndProductId(memberId, option.productId()).ifPresent(wishRepository::delete);
     }
 
-    private void publishOrderCompletedEvent(Member member, Order order, Option option) {
+    private void publishOrderCompletedEvent(Member member, Order order, Product product) {
         if (!member.hasKakaoIntegration()) {
             return;
         }
-        eventPublisher.publishEvent(new OrderCompletedEvent(member.getKakaoAccessToken(), order, option.getProduct()));
+        eventPublisher.publishEvent(new OrderCompletedEvent(member.getKakaoAccessToken(), order, product));
     }
 }

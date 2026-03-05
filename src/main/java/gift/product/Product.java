@@ -59,6 +59,10 @@ public class Product {
         return price;
     }
 
+    public int calculatePrice(int quantity) {
+        return price * quantity;
+    }
+
     public String getImageUrl() {
         return imageUrl;
     }

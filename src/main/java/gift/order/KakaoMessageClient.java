@@ -36,7 +36,7 @@ public class KakaoMessageClient implements OrderMessageClient {
     }
 
     private String buildTemplate(Order order, Product product) {
-        String totalPrice = String.format("%,d", order.getOption().calculatePrice(order.getQuantity()));
+        String totalPrice = String.format("%,d", product.calculatePrice(order.getQuantity()));
         String messageSuffix =
                 order.getMessage() != null && !order.getMessage().isBlank() ? "\n\n💌 " + order.getMessage() : "";
         String text = "🎁 선물이 도착했어요!\n\n%s (%s)\n수량: %d개\n금액: %s원%s"

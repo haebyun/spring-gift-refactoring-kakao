@@ -42,10 +42,6 @@ public class Option {
         this.quantity -= amount;
     }
 
-    public int calculatePrice(int quantity) {
-        return product.getPrice() * quantity;
-    }
-
     public boolean belongsToProduct(Long productId) {
         return this.product.getId().equals(productId);
     }
