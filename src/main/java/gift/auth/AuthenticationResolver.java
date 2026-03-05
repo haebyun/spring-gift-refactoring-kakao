@@ -14,6 +14,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class AuthenticationResolver implements HandlerMethodArgumentResolver {
+    private static final String BEARER_PREFIX = "Bearer ";
+
     private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
 
@@ -35,11 +37,11 @@ public class AuthenticationResolver implements HandlerMethodArgumentResolver {
             NativeWebRequest webRequest,
             WebDataBinderFactory binderFactory) {
         String authorization = webRequest.getHeader("Authorization");
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
-        String token = authorization.substring(7);
+        String token = authorization.substring(BEARER_PREFIX.length());
 
         String email;
         try {
