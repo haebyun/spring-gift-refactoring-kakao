@@ -18,8 +18,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Void> handleForbidden(IllegalStateException e) {
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<Void> handlePermissionDenied(PermissionDeniedException e) {
         return ResponseEntity.status(403).build();
     }
 }
