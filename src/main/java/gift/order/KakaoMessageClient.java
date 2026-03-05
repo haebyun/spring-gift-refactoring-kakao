@@ -2,7 +2,6 @@ package gift.order;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gift.product.Product;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -19,8 +18,8 @@ public class KakaoMessageClient implements OrderMessageClient {
     }
 
     @Override
-    public void sendToMe(String accessToken, Order order, Product product) {
-        String templateObject = buildTemplate(order, product);
+    public void sendToMe(OrderCompletedEvent event) {
+        String templateObject = buildTemplate(event);
 
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("template_object", templateObject);
@@ -28,20 +27,18 @@ public class KakaoMessageClient implements OrderMessageClient {
         restClient
                 .post()
                 .uri("https://kapi.kakao.com/v2/api/talk/memo/default/send")
-                .header("Authorization", "Bearer " + accessToken)
+                .header("Authorization", "Bearer " + event.accessToken())
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .body(params)
                 .retrieve()
                 .toBodilessEntity();
     }
 
-    private String buildTemplate(Order order, Product product) {
-        String totalPrice = String.format("%,d", product.calculatePrice(order.getQuantity()));
-        String messageSuffix =
-                order.getMessage() != null && !order.getMessage().isBlank() ? "\n\n💌 " + order.getMessage() : "";
+    private String buildTemplate(OrderCompletedEvent event) {
+        String totalPrice = String.format("%,d", event.totalPrice());
+        String messageSuffix = event.message() != null && !event.message().isBlank() ? "\n\n💌 " + event.message() : "";
         String text = "🎁 선물이 도착했어요!\n\n%s (%s)\n수량: %d개\n금액: %s원%s"
-                .formatted(
-                        product.getName(), order.getOption().getName(), order.getQuantity(), totalPrice, messageSuffix);
+                .formatted(event.productName(), event.optionName(), event.quantity(), totalPrice, messageSuffix);
 
         try {
             return objectMapper.writeValueAsString(

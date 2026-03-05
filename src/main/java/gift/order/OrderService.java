@@ -51,7 +51,7 @@ public class OrderService {
 
         Order saved = orderRepository.save(new Order(option, memberId, quantity, message));
         cleanupWish(memberId, option);
-        publishOrderCompletedEvent(member, saved, product);
+        publishOrderCompletedEvent(member, saved, product, option, quantity, message);
 
         return saved;
     }
@@ -72,8 +72,16 @@ public class OrderService {
         wishRepository.findByMemberIdAndProductId(memberId, option.productId()).ifPresent(wishRepository::delete);
     }
 
-    private void publishOrderCompletedEvent(Member member, Order order, Product product) {
+    private void publishOrderCompletedEvent(
+            Member member, Order saved, Product product, Option option, int quantity, String message) {
         member.getKakaoAccessTokenIfIntegrated()
-                .ifPresent(token -> eventPublisher.publishEvent(new OrderCompletedEvent(token, order, product)));
+                .ifPresent(token -> eventPublisher.publishEvent(new OrderCompletedEvent(
+                        token,
+                        saved.getId(),
+                        quantity,
+                        message,
+                        option.getName(),
+                        product.getName(),
+                        product.getPrice())));
     }
 }

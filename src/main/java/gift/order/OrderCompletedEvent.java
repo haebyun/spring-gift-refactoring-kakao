@@ -1,5 +1,15 @@
 package gift.order;
 
-import gift.product.Product;
+public record OrderCompletedEvent(
+        String accessToken,
+        Long orderId,
+        int quantity,
+        String message,
+        String optionName,
+        String productName,
+        int productPrice) {
 
-public record OrderCompletedEvent(String accessToken, Order order, Product product) {}
+    public int totalPrice() {
+        return productPrice * quantity;
+    }
+}
